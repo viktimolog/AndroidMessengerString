@@ -13,18 +13,11 @@
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/tvFrom"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.8"
-            android:text="Message from PC:" />
-
-        <TextView
             android:id="@+id/tvTextPC"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="0.2"
-            android:text="Text from PC" />
+            android:text="History:" />
 
     </LinearLayout>
 
@@ -58,6 +51,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="0.33" >
+
+        <Button
+            android:id="@+id/btnReadHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:text="Read History" />
 
         <Button
             android:id="@+id/btnSend"

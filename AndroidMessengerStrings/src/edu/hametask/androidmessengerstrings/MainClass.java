@@ -114,11 +114,7 @@ public class MainClass {
 		System.out.println("ecrypted");
 		
 		MyObject obj2 = (MyObject) decrypt(new FileInputStream("./file"));
-		//for(String s:obj2.data)
-		//{
-			//System.out.println(s);
 			System.out.println(obj2.data);
-		//}
 	}
 }
 
@@ -136,4 +132,3 @@ class MyObject implements Serializable
 		return data;
 	}
 }
-

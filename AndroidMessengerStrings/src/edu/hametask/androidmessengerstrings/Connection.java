@@ -41,8 +41,7 @@ public class Connection
 	{
 		try 
 		{
-//			s = new Socket(InetAddress.getByName(ipServer),port);
-			s = new Socket(ipServer,port); 
+			s = new Socket(InetAddress.getByName(ipServer),port);
 			dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
 			dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
 		} 
@@ -55,9 +54,6 @@ public class Connection
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
 
 	public MainClass getCipher() {
 		return cipher;

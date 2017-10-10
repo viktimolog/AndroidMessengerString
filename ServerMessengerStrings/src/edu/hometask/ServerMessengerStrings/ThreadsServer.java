@@ -34,7 +34,6 @@ public class ThreadsServer implements Runnable
 				System.out.println(chat);
 				if(!chat.equals("exit"))
 				{
-//				dos.writeUTF("Your message: "+chat+"");
 				dos.writeUTF(chat);
 				dos.flush();
 				}

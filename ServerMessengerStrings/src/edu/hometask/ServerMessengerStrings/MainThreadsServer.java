@@ -35,18 +35,12 @@ public class MainThreadsServer
 
 		while(true)
 		{
-			/*if(i%9==0) 
-			{
-				System.out.println("do you want to continue? y/n");
-				
-			}*/
 			try
 			{
 				Socket s = ss.accept();
 				ThreadsServer thS = new ThreadsServer(s);
 				Thread t = new Thread(thS);
 				t.start();
-//				i++;
 			}
 			catch (IOException e)
 			{
@@ -55,5 +49,4 @@ public class MainThreadsServer
 		}
 
 	}
-
 }

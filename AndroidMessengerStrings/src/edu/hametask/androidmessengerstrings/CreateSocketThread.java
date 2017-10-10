@@ -25,10 +25,5 @@ public class CreateSocketThread implements Runnable
 	public void run() 
 	{
         	con.createSocket();
-        
-/*        MainActivity.hMain.sendMessage(
-				MainActivity.hMain.obtainMessage(
-						MainActivity.HANDLER_KEYCREATESOCKET, con.getS()));*/
 	}
-
 }

@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -45,11 +46,10 @@ public class MainActivity extends Activity implements OnClickListener
 {
 	static String KEY = "mySPkey";
 	
-	public static final int HANDLER_KEYSAVE = 3;
-
-	protected static final int ChoiceIPServer = 456789;
-	static int HANDLER_KEYGET = 1;
-	static int HANDLER_KEYSEND = 2;
+	public static final int ChoiceIPServer = 456789;
+	public static final int HANDLER_KEYGET = 34451;
+	public static final int HANDLER_KEYSEND = 6763092;
+	public static final int HANDLER_KEYREADHISTORY = 3112092;
 	
 	public static Handler h;
 	
@@ -59,11 +59,10 @@ public class MainActivity extends Activity implements OnClickListener
 	
 	TextView tvTextPC;
 	EditText et;
-	Button btnSend;
+	Button btnSend, btnReadHistory;
 	EditText etServerName;
 	
 	SharedPreferences sp;
-	
 
     protected void onCreate(Bundle savedInstanceState) 
     {
@@ -72,11 +71,16 @@ public class MainActivity extends Activity implements OnClickListener
         
         filePath = getFilesDir().getPath().toString() + "/MyChat";
         
+     /*   File file = new File(filePath);
+        file.delete();*/
+        
         tvTextPC = (TextView) findViewById(R.id.tvTextPC);
         et = (EditText) findViewById(R.id.et);
         btnSend = (Button) findViewById(R.id.btnSend);
+        btnReadHistory = (Button) findViewById(R.id.btnReadHistory);
         
         btnSend.setOnClickListener(this);
+        btnReadHistory.setOnClickListener(this);
         
         con = new edu.hametask.androidmessengerstrings.Connection(null, "", 3571);
         
@@ -123,6 +127,11 @@ public class MainActivity extends Activity implements OnClickListener
 			@Override
 			public void handleMessage(Message msg)
 			{
+				if(msg.what == MainActivity.HANDLER_KEYREADHISTORY)
+				{
+					tvTextPC.setText(msg.obj.toString());
+				}
+				
 				if(msg.what == MainActivity.ChoiceIPServer)
 				{
 					con.setIPServer(msg.obj.toString());
@@ -132,36 +141,20 @@ public class MainActivity extends Activity implements OnClickListener
 					edit.putString(MainActivity.KEY, con.getIPServer());
 					edit.commit();
 					
-//					  Toast.makeText(getApplicationContext(), con.getIPServer(), Toast.LENGTH_LONG).show();
+					  Toast.makeText(getApplicationContext(), con.getIPServer(), Toast.LENGTH_LONG).show();
 					  
 					   new Thread(new CreateSocketThread(con)).start(); 
-				}
-				
-				if(msg.what == MainActivity.HANDLER_KEYSAVE)
-				{
-					try {
-						PrintWriter pw = new PrintWriter(
-														new BufferedOutputStream(
-														new FileOutputStream(filePath,true)));
-						pw.write("You wrote: " +  et.getText().toString()+"\r\n"
-								+ "PC answered: "+tvTextPC.getText().toString()+"\r\n\n");
-						pw.flush();
-					} catch (FileNotFoundException e) 
-					{
-						e.printStackTrace();
-					}
 				}
 				
 				if(msg.what == MainActivity.HANDLER_KEYGET)
 				{
 					if(msg.obj.toString().equals("Goodbye...")) finish();
 					
-					String tmp = tvTextPC.getText().toString();
-					tmp+="\n"+"Encrypt res: " + msg.obj.toString();
-					tvTextPC.setText(tmp);
+					new Thread(new SaveChatThread(filePath, msg.obj.toString())).start();
 					
-//					tvTextPC.setText(msg.obj.toString());
-					new Thread(new SaveChatThread()).start();
+					String tmp = tvTextPC.getText().toString();
+					tmp+="\n"+"Decrypt res: " + msg.obj.toString();
+					tvTextPC.setText(tmp);
 				}
 				
 				if(msg.what == MainActivity.HANDLER_KEYSEND)
@@ -187,9 +180,12 @@ public class MainActivity extends Activity implements OnClickListener
 		{
 		case R.id.btnSend:
 			con.setMessage(et.getText().toString());
+			new Thread(new SaveChatThread(filePath, con.getMessage())).start();
 			new Thread(new SendThread(con)).start();
 			break;
+		case R.id.btnReadHistory:
+			new Thread(new ReadFileHistory(filePath)).start();
+			break;			
 		}
-		
 	}
 }
