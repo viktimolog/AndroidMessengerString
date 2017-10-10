@@ -5,6 +5,8 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry exported="true" kind="lib" path="L:/___________My_Project_Java/Gson/gson-2.2.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/_Java/java_gson/gson-2.8.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/_Java/java_gson/gson-2.8.0-javadoc.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/_Java/java_gson/gson-2.8.0-sources.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

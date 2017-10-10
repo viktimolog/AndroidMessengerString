@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
 import java.util.Scanner;
 
 import javax.crypto.NoSuchPaddingException;
@@ -45,22 +46,16 @@ public class MainActivity extends Activity implements OnClickListener
 	static String KEY = "mySPkey";
 	
 	public static final int HANDLER_KEYSAVE = 3;
+
+	protected static final int ChoiceIPServer = 456789;
 	static int HANDLER_KEYGET = 1;
 	static int HANDLER_KEYSEND = 2;
 	
 	public static Handler h;
 	
-	private MainClass cipher;
-	private Gson gson;
+	private edu.hametask.androidmessengerstrings.Connection con;
 	
-	
-	private String from, filePath;
-	private String to;
-	private Socket s;
-	private String IPServer;
-	
-	private DataInputStream dis;
-	private DataOutputStream dos;
+	private String filePath;
 	
 	TextView tvTextPC;
 	EditText et;
@@ -69,21 +64,11 @@ public class MainActivity extends Activity implements OnClickListener
 	
 	SharedPreferences sp;
 	
-	public void setIPServer(String str)
-	{
-		IPServer = str;
-	}
 
     protected void onCreate(Bundle savedInstanceState) 
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        cipher = new MainClass();
-        
-        gson = new Gson();
-        
-	    IPServer="";
         
         filePath = getFilesDir().getPath().toString() + "/MyChat";
         
@@ -92,6 +77,8 @@ public class MainActivity extends Activity implements OnClickListener
         btnSend = (Button) findViewById(R.id.btnSend);
         
         btnSend.setOnClickListener(this);
+        
+        con = new edu.hametask.androidmessengerstrings.Connection(null, "", 3571);
         
 	    View view = View.inflate(this, R.layout.serverchoice, null);
 	    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
@@ -107,17 +94,10 @@ public class MainActivity extends Activity implements OnClickListener
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				IPServer = etServerName.getText().toString();
-//				IPServer = "10.1.100.78"; не работает, надо отдавать в Handler
+				MainActivity.h.sendMessage(
+						MainActivity.h.obtainMessage(
+								MainActivity.ChoiceIPServer, etServerName.getText().toString()));
 				dialog.cancel();
-				
-				sp = getSharedPreferences("SelectedServer", MODE_PRIVATE);
-				Editor edit = sp.edit();
-				//edit.putString(MainActivity.KEY, IPServer);
-				edit.putString(MainActivity.KEY, "10.1.100.78");
-				edit.commit();
-				
-				  Toast.makeText(getApplicationContext(), IPServer, Toast.LENGTH_LONG).show();
 			}
 		});
 	    
@@ -127,49 +107,36 @@ public class MainActivity extends Activity implements OnClickListener
 			public void onClick(DialogInterface dialog, int which)
 			{
 				sp = getSharedPreferences("SelectedServer", MODE_PRIVATE);
-				IPServer = sp.getString(MainActivity.KEY, "");
-				Toast.makeText(getApplicationContext(), IPServer, Toast.LENGTH_LONG).show();
+				con.setIPServer(sp.getString(MainActivity.KEY, ""));
+				
+				Toast.makeText(getApplicationContext(), con.getIPServer(), Toast.LENGTH_LONG).show();
+				
+				   new Thread(new CreateSocketThread(con)).start(); 
 			}
 		});
 	    
 	    AlertDialog ad = alert.create();
 	    ad.show();
 
-	    
-        try
-		{
-        	IPServer = "10.1.100.78";
-        	
-			s = new Socket(IPServer.toString(),3571);
-			
-			dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
-			dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
-			
-		}
-		catch (IOException e)
-		{
-			
-			IPServer = "192.168.1.104";
-			try 
-			{
-				s = new Socket(IPServer.toString(),3571);
-			} 
-			catch (UnknownHostException e1) 
-			{
-				e1.printStackTrace();
-			} 
-			catch (IOException e1) 
-			{
-				e1.printStackTrace();
-			}
-			e.printStackTrace();
-		}
-        
         h = new Handler()
         {
 			@Override
 			public void handleMessage(Message msg)
 			{
+				if(msg.what == MainActivity.ChoiceIPServer)
+				{
+					con.setIPServer(msg.obj.toString());
+					
+					sp = getSharedPreferences("SelectedServer", MODE_PRIVATE);
+					Editor edit = sp.edit();
+					edit.putString(MainActivity.KEY, con.getIPServer());
+					edit.commit();
+					
+//					  Toast.makeText(getApplicationContext(), con.getIPServer(), Toast.LENGTH_LONG).show();
+					  
+					   new Thread(new CreateSocketThread(con)).start(); 
+				}
+				
 				if(msg.what == MainActivity.HANDLER_KEYSAVE)
 				{
 					try {
@@ -187,76 +154,25 @@ public class MainActivity extends Activity implements OnClickListener
 				
 				if(msg.what == MainActivity.HANDLER_KEYGET)
 				{
-					MyObject temp = null;
-					try 
-					{
-						from = dis.readUTF();
-					} 
-					catch (IOException e) 
-					{
-						e.printStackTrace();
-					}
+					if(msg.obj.toString().equals("Goodbye...")) finish();
 					
-					SealedObject tmp = gson.fromJson(from, SealedObject.class);
+					String tmp = tvTextPC.getText().toString();
+					tmp+="\n"+"Encrypt res: " + msg.obj.toString();
+					tvTextPC.setText(tmp);
 					
-					try {
-						temp = (MyObject)cipher.myDecrypt(tmp);
-					} catch (InvalidKeyException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (NoSuchAlgorithmException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (NoSuchPaddingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-//					if(from.equals("Goodbye...")) finish();
-//					tvTextPC.setText(from);
-					
-					if(temp.toString().equals("Goodbye...")) finish();
-					tvTextPC.setText(temp.getData());
-					
+//					tvTextPC.setText(msg.obj.toString());
 					new Thread(new SaveChatThread()).start();
 				}
 				
 				if(msg.what == MainActivity.HANDLER_KEYSEND)
 				{
-					SealedObject sObj = null;
-					to = et.getText().toString();//+""
+					String tmp = tvTextPC.getText().toString();
+					tmp+="\n"+"Encrypt res: " + msg.obj.toString();
+					tvTextPC.setText(tmp);
 					
-					MyObject toObj = new MyObject(to);
+					et.setText("");
 					
-					try {
-						sObj = cipher.myEncrypt(toObj);
-					} catch (InvalidKeyException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (NoSuchAlgorithmException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (NoSuchPaddingException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					
-					try 
-					{
-						dos.writeUTF(gson.toJson(sObj));
-						dos.flush();
-					} 
-					catch (IOException e) 
-					{
-						e.printStackTrace();
-					}
-					new Thread(new getThread(MainActivity.this)).start();
+					new Thread(new getThread(con)).start();
 				}
 			}
         	
@@ -270,7 +186,8 @@ public class MainActivity extends Activity implements OnClickListener
 		switch(v.getId())
 		{
 		case R.id.btnSend:
-			new Thread(new SendThread(MainActivity.this)).start();
+			con.setMessage(et.getText().toString());
+			new Thread(new SendThread(con)).start();
 			break;
 		}
 		
