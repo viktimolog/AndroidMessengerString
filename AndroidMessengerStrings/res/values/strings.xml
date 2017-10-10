@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">AndroidMessengerStrings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="serverchoicetitle">Input IP of server:</string>
+    <string name="newServer">New Server</string>
+    <string name="oldServer">Old Server</string>
+
+</resources>
